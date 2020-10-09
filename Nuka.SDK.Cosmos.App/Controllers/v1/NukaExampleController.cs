@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
 using Nuka.SDK.Cosmos.App.Models;
 using Nuka.SDK.Cosmos.App.Services;
@@ -20,14 +21,35 @@ namespace Nuka.SDK.Cosmos.App.Controllers.v1
         private readonly INukaExampleService _exampleService;
         private readonly ILogger<NukaExampleController> _logger;
 
-        public NukaExampleController(INukaExampleService exampleService, ILogger<NukaExampleController> logger)
+        public NukaExampleController(
+            INukaExampleService exampleService, 
+            ILogger<NukaExampleController> logger)
         {
             _exampleService = exampleService;
             _logger = logger;
         }
 
+        [HttpGet("{group}/values/{id}", Name = "GetResourceById")]
+        public async Task<IActionResult> GetAsync(string group, string id)
+        {
+            var result = await _exampleService.GetAsync(@group, id);
+            if (result == null)
+            {
+                _logger.LogDebug($"No item with id {id} was found.");
+                return NotFound();
+            }
+
+            return Ok(new NukaExampleExternalModel
+            {
+                Id = result.Id,
+                Value = result.Value
+            });
+        }
+
         [HttpPost("{group}/values", Name = "PostResource")]
-        public async Task<IActionResult> PostAsync(string group, [FromBody] NukaExampleExternalModel model)
+        public async Task<IActionResult> PostAsync(
+            string group, 
+            [FromBody] NukaExampleExternalModel model)
         {
             if (!ModelState.IsValid)
             {
