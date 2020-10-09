@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
 using Nuka.SDK.Cosmos.App.Models;
 using Nuka.SDK.Cosmos.App.Services;
@@ -22,7 +22,7 @@ namespace Nuka.SDK.Cosmos.App.Controllers.v1
         private readonly ILogger<NukaExampleController> _logger;
 
         public NukaExampleController(
-            INukaExampleService exampleService, 
+            INukaExampleService exampleService,
             ILogger<NukaExampleController> logger)
         {
             _exampleService = exampleService;
@@ -33,22 +33,80 @@ namespace Nuka.SDK.Cosmos.App.Controllers.v1
         public async Task<IActionResult> GetAsync(string group, string id)
         {
             var result = await _exampleService.GetAsync(@group, id);
-            if (result == null)
+
+            if (result != null)
             {
-                _logger.LogDebug($"No item with id {id} was found.");
-                return NotFound();
+                return Ok(new NukaExampleExternalModel
+                {
+                    Id = result.Id,
+                    Value = result.Value
+                });
             }
 
-            return Ok(new NukaExampleExternalModel
+            _logger.LogDebug($"No item with id {id} was found.");
+            return NotFound();
+        }
+
+        [HttpGet("{group}/values", Name = "GerAllResources")]
+        public async Task<IActionResult> GetAllAsync(string group)
+        {
+            var result = await _exampleService.GetAllAsync(group);
+
+            if (result != null)
+                return Ok(result.Select(r => new NukaExampleExternalModel {Id = r.Id, Value = r.Value}));
+
+            _logger.LogDebug($"No item with id {group} was found.");
+            return NotFound();
+        }
+
+        [HttpGet("{group}/values/limit/{limit?}", Name = "GetResourcesToLimit")]
+        public IActionResult GetToLimitAsync(string group, int? limit)
+        {
+            try
             {
-                Id = result.Id,
-                Value = result.Value
-            });
+                var result = _exampleService.GetToLimit(group, limit);
+
+                if (result != null)
+                {
+                    var items = result.ToList<NukaExampleInternalModel>();
+                    var extItems = items.Select(r => new NukaExampleExternalModel {Id = r.Id, Value = r.Value});
+                    return Ok(extItems);
+                }
+
+                _logger.LogDebug($"No item with id {@group} was found.");
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"GetAsync: Exception message: {ex.Message}");
+                return StatusCode((int) HttpStatusCode.InternalServerError);
+            }
+        }
+
+        [HttpGet("{group}/list/values/{ids}", Name = "GetResourcesByList")]
+        public async Task<IActionResult> GetListAsync(string group, string ids)
+        {
+            try
+            {
+                var idList = ids.Split(',');
+                var result = await _exampleService.GetByIdsAsync(@group, idList);
+
+                if (result != null)
+                    return Ok(result.Select(r => new NukaExampleExternalModel {Id = r.Id, Value = r.Value}));
+
+                _logger.LogDebug($"No item with id {group} was found.");
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"GetAsync: Exception message: {ex.Message}");
+                return StatusCode((int) HttpStatusCode.InternalServerError);
+            }
         }
 
         [HttpPost("{group}/values", Name = "PostResource")]
         public async Task<IActionResult> PostAsync(
-            string group, 
+            string group,
             [FromBody] NukaExampleExternalModel model)
         {
             if (!ModelState.IsValid)
@@ -59,7 +117,7 @@ namespace Nuka.SDK.Cosmos.App.Controllers.v1
 
             try
             {
-                var result = 
+                var result =
                     await _exampleService.PostAsync(group, new NukaExampleInternalModel
                     {
                         Grouping = @group,
@@ -75,6 +133,66 @@ namespace Nuka.SDK.Cosmos.App.Controllers.v1
             catch (Exception ex)
             {
                 _logger.LogDebug($"PostAsync: Exception message: {ex.Message}");
+                return StatusCode((int) HttpStatusCode.InternalServerError);
+            }
+        }
+
+        [HttpPut("{group}/values/{id}", Name = "PutResourceById")]
+        public async Task<IActionResult> PutAsync(string group, string id, [FromBody] NukaExampleExternalModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogDebug($"PutAsync: Model state is not valid");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await _exampleService.PutAsync(@group, id,
+                    new NukaExampleInternalModel
+                    {
+                        Grouping = @group,
+                        Id = model.Id,
+                        Value = model.Value
+                    });
+
+                if (result != null)
+                    return NoContent();
+
+                _logger.LogDebug($"No item with id {id} was found.");
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"PutAsync: Exception message: {ex.Message}");
+                return StatusCode((int) HttpStatusCode.InternalServerError);
+            }
+        }
+
+        [HttpDelete("{group}/values/{id}", Name = "DeleteResourceById")]
+        public async Task<IActionResult> DeleteAsync(string group, string id)
+        {
+            try
+            {
+                var result = await _exampleService.GetAsync(group, id);
+
+                if (result == null)
+                {
+                    _logger.LogDebug($"No item with id {id} was found.");
+                    return NotFound();
+                }
+
+                var resultDeleted = await _exampleService.DeleteAsync(@group, id);
+
+                if (resultDeleted) 
+                    return NoContent();
+                
+                _logger.LogDebug($"Item with id {id} was not successfully deleted.");
+                return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"Exception message: {ex.Message}");
                 return StatusCode((int) HttpStatusCode.InternalServerError);
             }
         }
