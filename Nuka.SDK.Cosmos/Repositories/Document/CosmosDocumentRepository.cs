@@ -14,7 +14,7 @@ using Nuka.SDK.Cosmos.Options;
 
 namespace Nuka.SDK.Cosmos.Repositories.Document
 {
-    internal class CosmosDocumentRepository<T> : IDocumentRepository<T> where T : class, IDocument
+    public class CosmosDocumentRepository<T> : IDocumentRepository<T> where T : class, IDocument
     {
         private readonly string _collectionName;
         private readonly ILogger<CosmosDocumentRepository<T>> _logger;

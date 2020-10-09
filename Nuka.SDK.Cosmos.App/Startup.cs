@@ -6,10 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Nuka.SDK.Cosmos.App.Services;
+using Nuka.SDK.Cosmos.Utils;
 
 namespace Nuka.SDK.Cosmos.App
 {
@@ -25,6 +28,9 @@ namespace Nuka.SDK.Cosmos.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCosmosDb(Configuration);
+            services.AddScoped<INukaExampleService, NukaExampleService>();
+            
             services.AddControllers();
         }
 
