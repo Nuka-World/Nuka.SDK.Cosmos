@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -29,6 +30,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpGet("{group}/values/{id}", Name = "GetResourceById")]
+        [ProducesResponseType(typeof(NukaExampleExternalModel), 200)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> GetAsync(string group, string id)
         {
             var result = await _exampleService.GetAsync(@group, id);
@@ -47,6 +52,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpGet("{group}/values", Name = "GerAllResources")]
+        [ProducesResponseType(typeof(IEnumerable<NukaExampleExternalModel>), 200)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> GetAllAsync(string group)
         {
             var result = await _exampleService.GetAllAsync(group);
@@ -59,6 +68,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpGet("{group}/values/limit/{limit?}", Name = "GetResourcesToLimit")]
+        [ProducesResponseType(typeof(IEnumerable<NukaExampleExternalModel>), 200)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public IActionResult GetToLimitAsync(string group, int? limit)
         {
             try
@@ -83,6 +96,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpGet("{group}/list/values/{ids}", Name = "GetResourcesByList")]
+        [ProducesResponseType(typeof(IEnumerable<NukaExampleExternalModel>), 200)]
+        [ProducesResponseType(typeof(IDictionary<string, string>), 400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> GetListAsync(string group, string ids)
         {
             try
@@ -104,6 +121,9 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpPost("{group}/values", Name = "PostResource")]
+        [ProducesResponseType(typeof(NukaExampleExternalModel), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> PostAsync(
             string group,
             [FromBody] NukaExampleExternalModel model)
@@ -137,6 +157,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpPut("{group}/values/{id}", Name = "PutResourceById")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> PutAsync(string group, string id, [FromBody] NukaExampleExternalModel model)
         {
             if (!ModelState.IsValid)
@@ -169,6 +193,10 @@ namespace Nuka.SDK.Cosmos.App.Controllers
         }
 
         [HttpDelete("{group}/values/{id}", Name = "DeleteResourceById")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> DeleteAsync(string group, string id)
         {
             try
