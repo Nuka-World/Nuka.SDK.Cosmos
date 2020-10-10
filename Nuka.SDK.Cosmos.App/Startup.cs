@@ -20,9 +20,10 @@ namespace Nuka.SDK.Cosmos.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Register CosmosDB
             services.AddCosmosDb(Configuration);
             services.AddScoped<INukaExampleService, NukaExampleService>();
-            
+            // Controllers
             services.AddControllers();
         }
 

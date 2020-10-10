@@ -45,9 +45,9 @@ namespace Nuka.SDK.Cosmos.Utils
                 var cosmosSetupService = new CosmosSetupService(
                     c.GetRequiredService<CosmosClient>(),
                     cosmosOptions,
-                    c.GetRequiredService<Logger<CosmosSetupService>>());
+                    c.GetRequiredService<ILogger<CosmosSetupService>>());
                 return new CosmosSetupBackgroundService(cosmosSetupService,
-                    c.GetRequiredService<Logger<CosmosSetupBackgroundService>>());
+                    c.GetRequiredService<ILogger<CosmosSetupBackgroundService>>());
             });
 
             return serviceCollection;
@@ -120,7 +120,7 @@ namespace Nuka.SDK.Cosmos.Utils
                 throw new ArgumentNullException(nameof(cosmosOptions.EndpointUri),
                     "The CosmosOptions:EndpointUri parameter is missing from the service configuration");
 
-            if (Uri.TryCreate(cosmosOptions.EndpointUri, UriKind.Absolute, out _))
+            if (Uri.TryCreate(cosmosOptions.EndpointUri, UriKind.Absolute, out _) == false)
                 throw new ArgumentException(
                     "The CosmosOptions:EndpointUri parameter must be a properly formatted URI",
                     nameof(cosmosOptions.EndpointUri));

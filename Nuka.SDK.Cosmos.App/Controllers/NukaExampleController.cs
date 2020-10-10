@@ -9,12 +9,11 @@ using Nuka.SDK.Cosmos.App.Models;
 using Nuka.SDK.Cosmos.App.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Nuka.SDK.Cosmos.App.Controllers.v1
+namespace Nuka.SDK.Cosmos.App.Controllers
 {
     [ExcludeFromCodeCoverage]
     [ApiController]
-    [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/[controller]")]
     [SwaggerTag("Create, read, update and delete Products")]
     public class NukaExampleController : Controller
     {

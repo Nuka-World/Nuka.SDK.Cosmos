@@ -254,7 +254,7 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
                 throw;
             }
         }
-        
+
         public Task<IList<T>> GetDocumentsByIdsAsync(
             string partitionKey,
             string[] itemIds,
@@ -268,8 +268,8 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
         }
 
         private async Task<IList<T>> GetDocumentsByIdsInternalAsync(
-            string partitionKey, 
-            QueryDefinition filter, 
+            string partitionKey,
+            QueryDefinition filter,
             QueryRequestOptions queryRequestOptions = null)
         {
             var logProperties = new Dictionary<string, string>
@@ -278,16 +278,19 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
                 ["grouping"] = partitionKey,
                 ["consistency_level"] = queryRequestOptions?.ConsistencyLevel?.ToString()
             };
-            
+
             try
             {
                 queryRequestOptions ??= new QueryRequestOptions();
                 queryRequestOptions.PartitionKey = new PartitionKey(partitionKey);
 
-                var streamResultSet = _container.GetItemQueryStreamIterator(requestOptions: queryRequestOptions, queryDefinition: filter);
+                var streamResultSet =
+                    _container.GetItemQueryStreamIterator(requestOptions: queryRequestOptions, queryDefinition: filter);
 
-                var documents =  await ProcessQueryStreamAsync(streamResultSet, logProperties);
-                return _enableSoftDelete == false ? documents : documents.Where(d => (d as IExpiringDocument)?._deleted != true).ToList();
+                var documents = await ProcessQueryStreamAsync(streamResultSet, logProperties);
+                return _enableSoftDelete == false
+                    ? documents
+                    : documents.Where(d => (d as IExpiringDocument)?._deleted != true).ToList();
             }
             catch (Exception e)
             {
@@ -300,7 +303,7 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
         {
             if (string.IsNullOrEmpty(partitionKey))
                 throw new ArgumentNullException(nameof(partitionKey));
-            
+
             return DeleteDocumentsInternalAsync(partitionKey, requestOptions ?? _queryRequestOptions);
         }
 
@@ -334,7 +337,7 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
 
         public IQueryable<T> GetDocumentQuery(string partitionKey = null, int? maxItemCount = int.MaxValue)
         {
-            var queryRequestOptions = new QueryRequestOptions { MaxItemCount = maxItemCount};
+            var queryRequestOptions = new QueryRequestOptions {MaxItemCount = maxItemCount};
             if (string.IsNullOrWhiteSpace(partitionKey))
                 queryRequestOptions.EnableScanInQuery = true;
             else
@@ -380,7 +383,7 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
 
             return items;
         }
-        
+
         private QueryDefinition CreateSqlFilterFromArray(IReadOnlyList<string> itemIds)
         {
             if (itemIds == null || itemIds.Count == 0)
@@ -405,10 +408,11 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
             var nameList = string.Join(",", queryParameters.Keys);
             var queryText = string.Format(generalQuery, nameList);
             var spec = new QueryDefinition(queryText);
-            return queryParameters.Aggregate(spec, (current, queryParameter) => current.WithParameter(queryParameter.Key, queryParameter.Value));
+            return queryParameters.Aggregate(spec,
+                (current, queryParameter) => current.WithParameter(queryParameter.Key, queryParameter.Value));
         }
 
-        private T FromStream<T>(Stream stream)
+        private TS FromStream<TS>(Stream stream)
         {
             using (stream)
             {
@@ -417,7 +421,7 @@ namespace Nuka.SDK.Cosmos.Repositories.Document
                     using (var jsonTextReader = new JsonTextReader(sr))
                     {
                         jsonTextReader.DateParseHandling = DateParseHandling.None;
-                        return _serializer.Deserialize<T>(jsonTextReader);
+                        return _serializer.Deserialize<TS>(jsonTextReader);
                     }
                 }
             }
